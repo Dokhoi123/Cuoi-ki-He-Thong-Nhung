@@ -13,9 +13,6 @@
 
 
 DFRobot_DHT11 DHT;
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET    -1
 #define DHT11_PIN 13
 #define DTYPE DHT11
 #define ON V2
