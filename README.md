@@ -8,7 +8,6 @@ The project is divided into two main parts:
 1.  **IR Receiver:** A circuit and sketch used to capture and decode signals from a physical remote.
 2.  **IR Sender:** The main circuit and sketch that connects to Blynk and transmits the captured IR signals to control a device.
 
-![System Diagram (add your image if available)](https://via.placeholder.com/600x300.png?text=Your+System+Diagram)
 
 ## **Features**
 
