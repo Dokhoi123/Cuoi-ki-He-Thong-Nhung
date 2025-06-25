@@ -3,6 +3,8 @@
 This is an advanced embedded systems project that creates a smart, IoT-enabled controller for an air conditioner. The system monitors the ambient temperature and humidity, allows for precise remote control via the Blynk app, and features a PIR motion sensor for automatic power management. All status information is displayed locally on an LCD screen.
 
 This system is designed for "stateful" AC remotes, where each command (e.g., setting a new temperature) is a unique IR signal.
+![Uploading image.png…]()
+
 
 ## **Key Features**
 
