@@ -1,104 +1,104 @@
-# **IoT Stateful Air Conditioner (AC) Controller using ESP32 and Blynk**
+# **IoT Smart Air Conditioner Controller with ESP32 & Blynk**
 
-This is an embedded system project that creates an IoT-based smart remote for a stateful air conditioner. This type of AC remote sends a complete state signal (including temperature, mode, and fan speed) with every button press.
+This is an advanced embedded systems project that creates a smart, IoT-enabled controller for an air conditioner. The system monitors the ambient temperature and humidity, allows for precise remote control via the Blynk app, and features a PIR motion sensor for automatic power management. All status information is displayed locally on an LCD screen.
 
-The system learns these unique signals and allows you to select a specific temperature using a slider in the Blynk mobile app, giving you precise control over your AC from anywhere.
-
-## **System Architecture**
-
-The project is divided into two main parts:
-1.  **IR Receiver:** A circuit and sketch used to capture and decode the unique signal for **each temperature level** from the physical AC remote.
-2.  **IR Sender:** The main circuit and sketch that connects to Blynk, interprets the value from a slider widget, and transmits the corresponding pre-recorded IR signal.
+This system is designed for "stateful" AC remotes, where each command (e.g., setting a new temperature) is a unique IR signal.
 
 ## **Key Features**
 
-- **Stateful IR Signal Cloning:** Learns and replicates the complete state-based IR signal for each desired temperature setting.
-- **Precise Temperature Control:** Uses a slider in the Blynk app for intuitive and precise temperature selection (e.g., from 18°C to 30°C).
-- **IoT Integration:** Turns a standard, stateful-remote air conditioner into a smart, WiFi-enabled device.
-- **Scalable Code Structure:** The code is designed to easily add more temperature codes as they are captured.
+- **Real-time Environment Monitoring:** Uses a DHT11 sensor to track and display current temperature and humidity on both the Blynk app and an LCD screen.
+- **Precise Remote Control:** A slider widget in the Blynk app allows for setting the exact desired temperature. A separate button provides manual power control.
+- **Motion-based Automation:** Integrates a PIR motion sensor to automatically turn the AC on when a presence is detected and turn it off after a period of inactivity to save energy.
+- **Local Status Display:** A 16x2 I2C LCD screen shows the AC's current status (ON/OFF), set temperature, and live sensor readings.
+- **Stateful IR Code Management:** The code uses an efficient 2D array to store and manage the unique IR code for each temperature level.
 
 ## **Hardware & Software Requirements**
 
 ### **Hardware**
-- **Microcontroller:** ESP32 (or ESP8266).
-- **IR Components:**
-    - IR Receiver Module (e.g., VS1838B).
+- **Microcontroller:** ESP32
+- **Sensors:**
+    - DHT11 Temperature & Humidity Sensor.
+    - PIR Motion Sensor.
+- **Actuators & Display:**
     - IR LED (Transmitter).
-- **Peripherals:**
-    - Jumper wires.
-    - Breadboard.
+    - 5V LED (as a motion indicator).
+    - 16x2 I2C LCD Display.
+- **Peripherals:** Jumper wires, Breadboard.
 
 ### **Software & Platform**
 - **IoT Platform:** Blynk
 - **IDE:** Arduino IDE
 - **Libraries:**
     - `BlynkSimpleEsp32.h`
-    - `IRremoteESP8266.h` (Works for both ESP8266 and ESP32)
+    - `IRremoteESP8266.h`
+    - `DFRobot_DHT11.h`
+    - `LiquidCrystal_I2C.h`
     - `WiFi.h`
 
 ## **Setup and Usage Instructions**
 
-This project requires a methodical, two-step process. You must capture a separate IR code for every single temperature you wish to control.
+This process requires you to first capture the IR codes from your physical remote and then insert them into the main sender sketch.
 
 ### **Part 1: Capturing Each Temperature's IR Raw Code**
 
-1.  **Wire the Receiver Circuit:** Connect the IR Receiver module to your ESP32 (`VCC`->`3.3V`, `GND`->`GND`, `DATA`->`Pin D15`).
-2.  **Upload the Receiver Code:** Open `IR_Receiver.ino` in the Arduino IDE and upload it to the ESP32.
-3.  **Capture Codes Methodically:**
-    - Open the **Serial Monitor** (baud rate 115200).
-    - **Set your physical AC remote to the first temperature**, for example, **24°C**.
-    - Point the remote at the receiver and press the power/send button once.
-    - The Serial Monitor will print the full C++ array definition.
+*(You will need a separate `IR_Receiver.ino` sketch for this part, as described previously.)*
+
+1.  **Capture Methodically:** For this project, you must capture a separate code for each temperature level (e.g., 18°C, 19°C, ... 32°C) and one code for the "OFF" command.
+2.  **Get the Raw Data:**
+    - Point your AC remote at the IR receiver and press a button.
+    - The Arduino Serial Monitor will print the full C++ array, for example:
       ```cpp
-      // The Serial Monitor will print a complete line like this:
-      uint16_t rawData[143] = {3484, 1692, 458, 414, 458, 1264, ...};
+      // Example output:
+      uint16_t rawData[583] = {438, 444, 418, 444, ...};
       ```
-    - **CRITICAL STEP:** You only need to copy the **content inside the curly braces `{}`**. Do **NOT** copy `uint16_t rawData[143] =`.
+    - **CRITICAL STEP:** You only need to copy the **content inside the curly braces `{}`**.
       ```cpp
       // CORRECT data to copy:
-      {3484, 1692, 458, 414, 458, 1264, ...}
+      {438, 444, 418, 444, ...}
       ```
-    - Save this copied data in a text file, labeling it `temp_24_signal`.
-    - **REPEAT** this process for every single temperature level you want to control (e.g., 18°C, 19°C, ..., 30°C), saving each code with a descriptive name.
+    - Save each code in a text file. You will have one for each temperature and one for the OFF button.
 
-### **Part 2: Setting up the Sender & Controlling via Blynk**
+### **Part 2: Configuring the Sender Code (`main.cpp`)**
 
-1.  **Wire the Sender Circuit:** Connect the IR LED to your ESP32 (`Anode`->`Pin D4`, `Cathode`->`GND`).
-2.  **Configure the Sender Code:**
-    - Open the `IR_Sender.ino` sketch.
-    - First, declare your arrays with descriptive names. Then, **paste the copied data** into the corresponding array.
+1.  **Update Credentials:** Open the `main.cpp` file and set your WiFi and Blynk token:
+    ```cpp
+    const char* ssid     = "YOUR_WIFI_SSID";
+    const char* password = "YOUR_WIFI_PASSWORD";
+    char auth[] = "YOUR_BLYNK_AUTH_TOKEN";
+    ```
+
+2.  **Paste the Captured Codes:**
+    - Locate the `rawDataON` 2D array in the code.
+    - Paste each temperature's raw code data into a new row within the main curly braces. **The order is critical.** The first row corresponds to 18°C, the second to 19°C, and so on.
       ```cpp
-      // In your sender sketch, define the arrays and paste the copied data:
-      uint16_t temp24Signal[] = {3484, 1692, 458, 414, ...}; // Paste the code for 24°C here
-      uint16_t temp25Signal[] = {3490, 1680, 450, 420, ...}; // Paste the code for 25°C here
-      // ...and so on for all other temperatures
+      // Paste the data for each temperature here, in order
+      uint16_t rawDataON[15][583] = {
+        { ... }, // Paste raw code for 18°C here
+        { ... }, // Paste raw code for 19°C here
+        { ... }, // Paste raw code for 20°C here
+        // ... continue for all other temperatures
+      };
       ```
-    - Update your network and Blynk credentials:
+    - Locate the `rawDataOFF` array and paste the code for the OFF button there.
       ```cpp
-      char auth[] = "YOUR_BLYNK_AUTH_TOKEN";
-      char ssid[] = "YOUR_WIFI_SSID";
-      char pass[] = "YOUR_WIFI_PASSWORD";
-      ```
-    - Implement a `BLYNK_WRITE` function with a `switch` statement to handle the slider input:
-      ```cpp
-      BLYNK_WRITE(V1) { // Assuming your slider is on Virtual Pin V1
-        int temp = param.asInt(); // Get temperature value from slider
-
-        switch (temp) {
-          case 24:
-            irsend.sendRaw(temp24Signal, sizeof(temp24Signal)/sizeof(temp24Signal[0]), 38);
-            break;
-          case 25:
-            irsend.sendRaw(temp25Signal, sizeof(temp25Signal)/sizeof(temp25Signal[0]), 38);
-            break;
-          // ... add a 'case' for every other temperature you have
-        }
-      }
+      uint16_t rawDataOFF[583] = { ... }; // Paste OFF code here
       ```
 
-3.  **Configure the Blynk App:**
-    - Create a new project and get your **Authentication Token**.
-    - Add a **Slider** widget to your dashboard.
-    - Configure the slider:
-        - **OUTPUT:** Set it to the Virtual Pin you used in the code (e.g., **V1**).
-        - **RANGE:** Set the min and max values to match the temperatures you captured (e.g., **18** to **30**).
+3.  **Configure Blynk App:**
+    - Create a project and get your **Auth Token**.
+    - Add the following widgets:
+        - **Gauge (Temp):** Virtual Pin **V0**.
+        - **Gauge (Humidity):** Virtual Pin **V1**.
+        - **Button (Power):** Virtual Pin **V2**. Set to "Switch" mode.
+        - **Slider (Set Temp):** Virtual Pin **V4**. Set range from **18** to **32**.
+
+4.  **Upload and Run:**
+    - Connect your ESP32 board, select the correct Board and COM Port in the Arduino IDE.
+    - Upload the sketch.
+    - The system is now ready to use.
+
+## **Project Logic**
+- The ESP32 continuously reads data from the DHT11 sensor and sends it to Blynk.
+- The user can set a target temperature using the **Slider (V4)** or toggle the power using the **Button (V2)**.
+- The **PIR sensor** provides automation: if it detects motion, it turns the AC on to the last set temperature. If no motion is detected for a period, it sends the OFF signal.
+- The **LCD screen** provides a local display of the system's status, set temperature, and sensor data.
