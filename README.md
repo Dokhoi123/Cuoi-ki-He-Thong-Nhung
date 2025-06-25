@@ -1,20 +1,19 @@
-# **IoT Universal IR Remote Control System using ESP32 and Blynk**
+# **IoT Air Conditioner (AC) Controller using ESP32 and Blynk**
 
-This is an embedded system project that creates an IoT-based Universal Infrared (IR) Remote. The system can learn and clone signals from any physical IR remote control and then transmit those signals on command, allowing you to control devices like TVs, air conditioners, or fans from the Blynk mobile application.
+This embedded system project creates an IoT-based smart remote for an air conditioner. It allows you to learn and clone signals from your existing AC remote (such as power, temperature, and mode settings) and control your AC from anywhere using the Blynk mobile application.
 
 ## **System Architecture**
 
 The project is divided into two main parts:
-1.  **IR Receiver:** A circuit and sketch used to capture and decode signals from a physical remote.
-2.  **IR Sender:** The main circuit and sketch that connects to Blynk and transmits the captured IR signals to control a device.
+1.  **IR Receiver:** A circuit and sketch used to capture and decode signals from a physical AC remote.
+2.  **IR Sender:** The main circuit and sketch that connects to Blynk and transmits the captured IR signals to control the air conditioner.
 
+## **Key Features**
 
-## **Features**
-
-- **Universal Remote Cloning:** Can learn and replicate raw IR signals from virtually any remote control.
-- **Real-time Control:** Control your devices remotely via the Blynk mobile app over WiFi.
-- **IoT Integration:** A practical implementation of an Internet of Things device for smart home automation.
-- **Modular Code:** Separate, easy-to-use sketches for receiving (learning) and sending (controlling).
+- **AC Remote Cloning:** Learns and replicates raw IR signals for various air conditioner functions.
+- **Remote AC Control:** Power on/off, adjust temperature, and change operating modes (e.g., Cool, Fan, Dry) via the Blynk app.
+- **IoT Integration:** Turns a standard, non-smart air conditioner into a WiFi-enabled smart device.
+- **Modular Code:** Separate, easy-to-use sketches for receiving (learning) and sending (controlling) signals.
 
 ## **Hardware & Software Requirements**
 
@@ -32,35 +31,34 @@ The project is divided into two main parts:
 - **IDE:** Arduino IDE
 - **Libraries:**
     - `BlynkSimpleEsp32.h`
-    - `IRremoteESP8266.h` (This library works for both ESP8266 and ESP32)
+    - `IRremoteESP8266.h` (This library also works for ESP32)
     - `WiFi.h`
 
 ## **Setup and Usage Instructions**
 
-This project requires a two-step process: first, you capture the codes from your remote, and second, you use those codes in the main sender application.
+This project requires a two-step process: first, you capture the codes for each AC function, and second, you use those codes in the main sender application.
 
-### **Part 1: Capturing IR Raw Codes (Receiver)**
+### **Part 1: Capturing AC IR Raw Codes (Receiver)**
 
 1.  **Wire the Circuit:** Connect the IR Receiver module to your ESP32.
     - `VCC` -> `3.3V`
     - `GND` -> `GND`
-    - `DATA` -> `Pin D15` (or any other GPIO pin, update in the code if changed).
+    - `DATA` -> `Pin D15` (or any other GPIO, update in the code if changed).
 
 2.  **Upload the Receiver Code:**
-    - Open the `IR_Receiver.ino` (or similarly named) sketch in the Arduino IDE.
-    - Select your ESP32 board and the correct COM port.
-    - Upload the sketch.
+    - Open the `IR_Receiver.ino` sketch in the Arduino IDE.
+    - Select your ESP32 board and the correct COM port and upload.
 
 3.  **Capture the Codes:**
     - After uploading, open the **Serial Monitor** (set the baud rate to 115200).
-    - Point your physical remote control (e.g., TV remote) at the IR receiver.
-    - Press the button you want to clone (e.g., the "Power" button).
-    - The Serial Monitor will print the captured signal as a C++ array of raw data. It will look something like this:
+    - Point your physical AC remote at the receiver.
+    - Press a button you want to clone (e.g., **Power On**, **Temp Up**, **Mode Change**).
+    - The Serial Monitor will print the captured signal as a C++ array. It will look like this:
       ```cpp
-      uint16_t rawData[67] = {9018, 4428, 608, 1614, 608, 1614, ...};
+      uint16_t rawData[143] = {3484, 1692, 458, 414, 458, 1264, ...};
       ```
-    - **COPY** the entire array (`uint16_t rawData[...] = {...};`). This is the unique signal for that button.
-    - Repeat this process for every button you want to control. Save each copied array.
+    - **COPY** the entire array.
+    - **IMPORTANT:** Repeat this process for **every button function** you want to control (Power, Temp Down, Fan Speed, etc.). Save each copied array in a text file with a descriptive name.
 
 ### **Part 2: Setting up the Sender & Controlling via Blynk**
 
@@ -69,13 +67,15 @@ This project requires a two-step process: first, you capture the codes from your
     - Cathode (shorter leg) -> `GND`.
 
 2.  **Configure the Sender Code:**
-    - Open the `IR_Sender.ino` (or main project) sketch.
-    - **PASTE the captured raw code array** into the sketch, replacing the placeholder array. For example, if you captured the power button signal:
+    - Open the `IR_Sender.ino` (main project) sketch.
+    - **PASTE each captured array** into the code, replacing the placeholders. You will need multiple arrays, one for each function:
       ```cpp
-      // Replace this placeholder array with the one you copied
-      uint16_t powerSignal[67] = {9018, 4428, 608, 1614, ...};
+      // Paste each captured signal into its corresponding array
+      uint16_t powerSignal[] = { ... }; // Paste Power On/Off code here
+      uint16_t tempUpSignal[] = { ... };  // Paste Temp Up code here
+      uint16_t modeSignal[] = { ... };    // Paste Mode Change code here
       ```
-    - Update your network and Blynk credentials in the code:
+    - Update your network and Blynk credentials:
       ```cpp
       char auth[] = "YOUR_BLYNK_AUTH_TOKEN";
       char ssid[] = "YOUR_WIFI_SSID";
@@ -83,18 +83,16 @@ This project requires a two-step process: first, you capture the codes from your
       ```
 
 3.  **Configure the Blynk App:**
-    - Create a new project in the Blynk app.
-    - You will receive an **Authentication Token** via email. Paste this into the `auth[]` variable above.
-    - Add a **Button** widget to your project dashboard.
-    - Set the button's output to a Virtual Pin, for example, **V1**.
+    - Create a new project in the Blynk app and get your **Authentication Token**.
+    - Add **multiple Button** widgets to your dashboard.
+    - Assign each button to a different **Virtual Pin** (e.g., **V1 for Power**, **V2 for Temp Up**, **V3 for Mode**). Your code must be written to handle which signal to send based on the triggered Virtual Pin.
 
 4.  **Upload the Sender Code:**
     - Select your ESP32 board and COM port.
-    - Upload the `IR_Sender.ino` sketch.
+    - Upload the sketch.
 
-5.  **Control Your Device:**
+5.  **Control Your AC:**
     - Power on the ESP32 circuit.
     - Open the Blynk project and press the "Play" icon.
-    - When you press the button (V1) in the app, the ESP32 will transmit the IR signal, and your device (e.g., TV) should respond.
+    - Pressing the buttons in the app will now send the corresponding IR signals to your air conditioner.
 
-![image](https://github.com/user-attachments/assets/8d020380-cce1-4f6d-8767-3e839dc2863a)
