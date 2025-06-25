@@ -46,29 +46,31 @@ This project requires a methodical, two-step process. You must capture a separat
 2.  **Upload the Receiver Code:** Open `IR_Receiver.ino` in the Arduino IDE and upload it to the ESP32.
 3.  **Capture Codes Methodically:**
     - Open the **Serial Monitor** (baud rate 115200).
-    - **Set your physical AC remote to the first temperature**, for example, **24°C** (ensure mode and fan speed are also set as desired).
+    - **Set your physical AC remote to the first temperature**, for example, **24°C**.
     - Point the remote at the receiver and press the power/send button once.
-    - The Serial Monitor will print the captured signal as a C++ array.
+    - The Serial Monitor will print the full C++ array definition.
       ```cpp
-      // This is the code for 24 DEGREES
-      uint16_t rawData[143] = {3484, 1692, 458, ...};
+      // The Serial Monitor will print a complete line like this:
+      uint16_t rawData[143] = {3484, 1692, 458, 414, 458, 1264, ...};
       ```
-    - **COPY** this entire array and save it in a text file, labeling it `temp_24_signal`.
-    - **Now, set your physical remote to 25°C** and press the button again. A **new, different** code will be generated.
-    - **COPY** this new array and save it as `temp_25_signal`.
-    - **REPEAT** this process for every single temperature level you want to control (e.g., 18°C, 19°C, ..., 30°C).
+    - **CRITICAL STEP:** You only need to copy the **content inside the curly braces `{}`**. Do **NOT** copy `uint16_t rawData[143] =`.
+      ```cpp
+      // CORRECT data to copy:
+      {3484, 1692, 458, 414, 458, 1264, ...}
+      ```
+    - Save this copied data in a text file, labeling it `temp_24_signal`.
+    - **REPEAT** this process for every single temperature level you want to control (e.g., 18°C, 19°C, ..., 30°C), saving each code with a descriptive name.
 
 ### **Part 2: Setting up the Sender & Controlling via Blynk**
 
 1.  **Wire the Sender Circuit:** Connect the IR LED to your ESP32 (`Anode`->`Pin D4`, `Cathode`->`GND`).
 2.  **Configure the Sender Code:**
     - Open the `IR_Sender.ino` sketch.
-    - **Create a separate array for each temperature code** you captured. Paste the data you saved into the corresponding array:
+    - First, declare your arrays with descriptive names. Then, **paste the copied data** into the corresponding array.
       ```cpp
-      // Paste each captured signal into its corresponding array
-      uint16_t temp24Signal[] = {3484, 1692, ...}; // Code for 24°C
-      uint16_t temp25Signal[] = {3490, 1680, ...}; // Code for 25°C
-      uint16_t temp26Signal[] = {3488, 1688, ...}; // Code for 26°C
+      // In your sender sketch, define the arrays and paste the copied data:
+      uint16_t temp24Signal[] = {3484, 1692, 458, 414, ...}; // Paste the code for 24°C here
+      uint16_t temp25Signal[] = {3490, 1680, 450, 420, ...}; // Paste the code for 25°C here
       // ...and so on for all other temperatures
       ```
     - Update your network and Blynk credentials:
@@ -77,7 +79,7 @@ This project requires a methodical, two-step process. You must capture a separat
       char ssid[] = "YOUR_WIFI_SSID";
       char pass[] = "YOUR_WIFI_PASSWORD";
       ```
-    - Ensure your code has a `BLYNK_WRITE` function with a `switch` statement to handle the slider input:
+    - Implement a `BLYNK_WRITE` function with a `switch` statement to handle the slider input:
       ```cpp
       BLYNK_WRITE(V1) { // Assuming your slider is on Virtual Pin V1
         int temp = param.asInt(); // Get temperature value from slider
@@ -100,13 +102,3 @@ This project requires a methodical, two-step process. You must capture a separat
     - Configure the slider:
         - **OUTPUT:** Set it to the Virtual Pin you used in the code (e.g., **V1**).
         - **RANGE:** Set the min and max values to match the temperatures you captured (e.g., **18** to **30**).
-
-4.  **Upload and Control:**
-    - Upload the `IR_Sender.ino` sketch to the ESP32.
-    - Power on the circuit, open the Blynk app, and press "Play".
-    - Moving the slider will now send the specific IR command for that temperature to your AC.
-
-## **Author**
-* **Full Name:** [Your Name]
-* **Student ID:** [Your Student ID]
-* **Class:** [Your Class]
