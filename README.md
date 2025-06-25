@@ -3,8 +3,8 @@
 This is an advanced embedded systems project that creates a smart, IoT-enabled controller for an air conditioner. The system monitors the ambient temperature and humidity, allows for precise remote control via the Blynk app, and features a PIR motion sensor for automatic power management. All status information is displayed locally on an LCD screen.
 
 This system is designed for "stateful" AC remotes, where each command (e.g., setting a new temperature) is a unique IR signal.
-![image](https://github.com/user-attachments/assets/b7590e9e-617d-40f7-90fa-41d14f31c7e6)
 
+<img src="https://github.com/user-attachments/assets/b7590e9e-617d-40f7-90fa-41d14f31c7e6" alt="System Diagram" width="500"/>
 
 ## **Key Features**
 
@@ -43,7 +43,7 @@ This process requires you to first capture the IR codes from your physical remot
 
 ### **Part 1: Capturing Each Temperature's IR Raw Code**
 
-*(You will need a separate `IR_Receiver.ino` sketch for this part, as described previously.)*
+*(You will need a separate `IR_Receiver.ino` sketch for this part.)*
 
 1.  **Capture Methodically:** For this project, you must capture a separate code for each temperature level (e.g., 18°C, 19°C, ... 32°C) and one code for the "OFF" command.
 2.  **Get the Raw Data:**
